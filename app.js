@@ -186,7 +186,7 @@ app.post('/send-media', async (req, res) => {
     return response.data.toString('base64');
   });
 
-  const media = new MessageMedia(mimetype, attachment, 'Media');
+  const media = new MessageMedia(mimetype, attachment);
 
   client.sendMessage(number, media, {
     caption: caption
