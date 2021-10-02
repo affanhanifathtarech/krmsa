@@ -9,7 +9,7 @@ const { phoneNumberFormatter } = require('./helpers/formatter');
 const axios = require('axios');
 const mime = require('mime-types');
 
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 8000;
 
 const app = express();
 const server = http.createServer(app);
