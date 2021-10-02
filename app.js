@@ -6,11 +6,10 @@ const qrcode = require('qrcode');
 const http = require('http');
 const fs = require('fs');
 const { phoneNumberFormatter } = require('./helpers/formatter');
-const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
 
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8080;
 
 const app = express();
 const server = http.createServer(app);
@@ -20,15 +19,13 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
-app.use(fileUpload({
-  debug: true
-}));
 
 const SESSION_FILE_PATH = './whatsapp-session.json';
 let sessionCfg;
 if (fs.existsSync(SESSION_FILE_PATH)) {
   sessionCfg = require(SESSION_FILE_PATH);
 }
+
 
 app.get('/', (req, res) => {
   res.sendFile('index.html', {
@@ -76,42 +73,6 @@ client.on('message', msg => {
     });
   }
 
-  // Downloading media
-  if (msg.hasMedia) {
-    msg.downloadMedia().then(media => {
-      // To better understanding
-      // Please look at the console what data we get
-      console.log(media);
-
-      if (media) {
-        // The folder to store: change as you want!
-        // Create if not exists
-        const mediaPath = './downloaded-media/';
-
-        if (!fs.existsSync(mediaPath)) {
-          fs.mkdirSync(mediaPath);
-        }
-
-        // Get the file extension by mime-type
-        const extension = mime.extension(media.mimetype);
-        
-        // Filename: change as you want! 
-        // I will use the time for this example
-        // Why not use media.filename? Because the value is not certain exists
-        const filename = new Date().getTime();
-
-        const fullFilename = mediaPath + filename + '.' + extension;
-
-        // Save to file
-        try {
-          fs.writeFileSync(fullFilename, media.data, { encoding: 'base64' }); 
-          console.log('File downloaded successfully!', fullFilename);
-        } catch (err) {
-          console.log('Failed to save the file:', err);
-        }
-      }
-    });
-  }
 });
 
 client.initialize();
@@ -119,24 +80,26 @@ client.initialize();
 // Socket IO
 io.on('connection', function(socket) {
   socket.emit('message', 'Connecting...');
+  console.log('Connecting...');
 
   client.on('qr', (qr) => {
-    console.log('QR RECEIVED', qr);
+    console.log('QR Code received, scan please!');
     qrcode.toDataURL(qr, (err, url) => {
       socket.emit('qr', url);
       socket.emit('message', 'QR Code received, scan please!');
     });
   });
-
+  
   client.on('ready', () => {
     socket.emit('ready', 'Whatsapp is ready!');
     socket.emit('message', 'Whatsapp is ready!');
+    console.log('Whatsapp is ready!');
   });
 
   client.on('authenticated', (session) => {
     socket.emit('authenticated', 'Whatsapp is authenticated!');
     socket.emit('message', 'Whatsapp is authenticated!');
-    console.log('AUTHENTICATED', session);
+    console.log('Whatsapp is authenticated!');
     sessionCfg = session;
     fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function(err) {
       if (err) {
@@ -147,10 +110,12 @@ io.on('connection', function(socket) {
 
   client.on('auth_failure', function(session) {
     socket.emit('message', 'Auth failure, restarting...');
+    console.log('Auth failure, restarting...');
   });
 
   client.on('disconnected', (reason) => {
     socket.emit('message', 'Whatsapp is disconnected!');
+    console.log('Whatsapp is disconnected!');
     fs.unlinkSync(SESSION_FILE_PATH, function(err) {
         if(err) return console.log(err);
         console.log('Session file deleted!');
@@ -210,23 +175,11 @@ app.post('/send-message', [
 });
 
 // Send media
-app.post('/send-media', async (req, res) => {
+app.post('/send-media-url', async (req, res) => {
   const number = phoneNumberFormatter(req.body.number);
   const caption = req.body.caption;
-  const fileUrl = req.body.file;
-
-  // const media = MessageMedia.fromFilePath('./image-example.png');
-  // const file = req.files.file;
-  // const media = new MessageMedia(file.mimetype, file.data.toString('base64'), file.name);
-  let mimetype;
-  const attachment = await axios.get(fileUrl, {
-    responseType: 'arraybuffer'
-  }).then(response => {
-    mimetype = response.headers['content-type'];
-    return response.data.toString('base64');
-  });
-
-  const media = new MessageMedia(mimetype, attachment, 'Media');
+  const url = req.body.url;
+  const media = MessageMedia.fromFilePath(url);
 
   client.sendMessage(number, media, {
     caption: caption
