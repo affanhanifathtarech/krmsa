@@ -177,6 +177,7 @@ app.post('/send-media', async (req, res) => {
   const number = phoneNumberFormatter(req.body.number);
   const caption = req.body.message;
   const fileUrl = req.body.file;
+  const nama_file = req.body.nama_file;
 
   let mimetype;
   const attachment = await axios.get(fileUrl, {
@@ -186,7 +187,7 @@ app.post('/send-media', async (req, res) => {
     return response.data.toString('base64');
   });
 
-  const media = new MessageMedia(mimetype, attachment);
+  const media = new MessageMedia(mimetype, attachment, nama_file);
 
   client.sendMessage(number, media, {
     caption: caption
