@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-api",
   "version": "1.0.0",
-  "description": "Whatsapp api by Ngekoding",
+  "description": "Whatsapp API by Karisma",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -12,18 +12,20 @@
     "whatsapp-api",
     "node.js"
   ],
-  "author": "Nur Muhammad",
+  "author": "Karisma Polsri",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.20.0",
     "express": "^4.17.1",
-    "express-fileupload": "^1.2.0",
-    "express-validator": "^6.9.2",
+    "express-fileupload": "^1.2.1",
+    "express-validator": "^6.12.1",
     "http": "0.0.1-security",
     "mime-types": "^2.1.32",
+    "pg": "^8.7.1",
     "qrcode": "^1.4.4",
-    "socket.io": "2.3.0",
-    "whatsapp-web.js": "latest"
+    "sharp": "^0.29.1",
+    "socket.io": "^2.3.0",
+    "whatsapp-web.js": "^1.14.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
