@@ -27,7 +27,7 @@ const db = require('./helpers/db.js');
     });
   });
   
-  const savedSession = db.readSession();
+  const savedSession = await db.readSession();
   const client = new Client({
     restartOnAuthFail: true,
     puppeteer: {
